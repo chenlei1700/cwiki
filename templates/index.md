@@ -6,7 +6,13 @@
 
 - **[SCHEMA.md](SCHEMA.md)** — Operating rules: data layering, page templates, cross-reference conventions
 - **[MAINTENANCE_ROUTING.md](MAINTENANCE_ROUTING.md)** — Event → file list routing (which files to update on each kind of event)
+- **[ONBOARDING.md](ONBOARDING.md)** — New-session loading guide (what to read before doing real work)
 - **[log.md](log.md)** — Operations log (newest first)
+
+<!-- Navigation layer (add when the pain appears — SCHEMA §12):
+- **[USAGE_MANUAL.md](USAGE_MANUAL.md)** — scenario → command manual
+- **[SKILL_ROUTING.md](SKILL_ROUTING.md)** — trigger phrase → skill mapping
+-->
 
 ## Architecture
 

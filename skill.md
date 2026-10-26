@@ -1,13 +1,13 @@
 ---
 name: wiki-management
-description: LLM-maintained project knowledge base methodology. Provides 3-layer data model (SSOT / Derived / Narrative), event-routing maintenance table, [[name]] cross-references, and Ingest/Query/Lint operations. Use when user says "set up a wiki", "建立知识库", "项目文档体系", "bootstrap wiki", "ingest 资料到 wiki", "query 知识库", "lint wiki", "整理项目知识", or wants to apply LLM-maintained knowledge base methodology to a new project. Bootstraps from templates if `wiki/` does not exist; otherwise drives daily Ingest/Query/Lint workflows over existing wiki.
+description: LLM-maintained project knowledge base methodology. Provides 3-layer data model (SSOT / Derived / Narrative), event-routing maintenance table, [[name]] cross-references, Ingest/Query/Lint operations, and the sync/drift/enforcement mechanisms that keep the wiki alive at scale. Use when user says "set up a wiki", "建立知识库", "项目文档体系", "bootstrap wiki", "ingest 资料到 wiki", "query 知识库", "lint wiki", "整理项目知识", or wants to apply LLM-maintained knowledge base methodology to a new project. Bootstraps from templates if `wiki/` does not exist; otherwise drives daily Ingest/Query/Lint workflows over existing wiki.
 ---
 
 # wiki-management — LLM-maintained knowledge base methodology
 
 You are the curator of a project's `wiki/` knowledge base. **Humans feed material and make decisions. You organize, archive, cross-link, and keep things consistent.**
 
-This skill is **project-agnostic**: the methodology applies equally to a quant trading project, a SaaS codebase, a research lab notebook, or a personal lab. The templates in `templates/` give you a generic 5-category bootstrap; you extend with domain categories as needed.
+This skill is **project-agnostic**: the methodology applies equally to a quant trading project, a SaaS codebase, a research lab notebook, or a personal lab. The templates in `templates/` give you a generic 5-category bootstrap; you extend with domain categories as needed. The companion `docs/maintenance-mechanisms.md` describes the automation that keeps a wiki alive over months; `tools/` holds reference implementations.
 
 ---
 
@@ -36,11 +36,15 @@ Every file in `wiki/` belongs to exactly **one** of these layers. The layer dete
 
 | Layer | Definition | Who writes | Examples |
 |---|---|---|---|
-| **L1 SSOT** | Machine-generated raw truth. Single source. | Scripts / external systems. **Humans and LLMs must NOT hand-edit.** | Backtest JSON output, append-only ledgers (`ship_history.jsonl`), runtime config files |
+| **L1 SSOT** | Machine-generated raw truth. Single source. | Scripts / external systems. **Humans and LLMs must NOT hand-edit.** | Backtest JSON output, append-only ledgers (`release_history.jsonl`), runtime config files |
 | **L2 Derived View** | Auto-generated *view* of L1 data. | A sync script reads L1 and rewrites L2. **Humans and LLMs must NOT hand-edit.** | A markdown summary of "current production state" generated from a JSON ledger |
 | **L3 Narrative** | Stories, lessons, methodology, free-form analysis. | Humans and LLMs hand-write. **Scripts must NOT overwrite.** | `experiments/*.md`, `concepts/*.md`, `log.md` |
 
-**The one rule that prevents 90% of drift**: the same fact lives in **exactly one place — in L1**. L2 and L3 *reference* L1 by link, they do not *copy* its content. If you find yourself about to write a number into a narrative page that already exists in an L1 ledger, instead write a link `see [combo3_h68 summary](../../backtest_result/h68/summary.json)`.
+**The one rule that prevents 90% of drift**: the same fact lives in **exactly one place — in L1**. L2 and L3 *reference* L1 by link, they do not *copy* its content. If you find yourself about to write a number into a narrative page that already exists in an L1 ledger, instead write a link `see [release summary](../../build/v3/summary.json)`. This applies to `CLAUDE.md` and `README.md` too — they link to the derived view, never carry its numbers.
+
+Within L1, two sub-kinds get extra rules once they appear (full spec: templates/SCHEMA.md §3):
+- **Append-only ledgers**: history is immutable — corrections are superseding rows or overlay records, never in-place edits.
+- **Rebuildable derived data** (observability JSON etc.): gitignored, never linked to as truth.
 
 ### 1.2 The four ironclad principles
 
@@ -72,6 +76,10 @@ The wiki is for things future-you needs to retrieve. Do NOT create pages for:
 - Ephemeral session state (use task lists, not wiki, for in-flight TODOs)
 - "What I did today" running diaries — those go in `log.md` as one-liners, not their own page
 
+### 1.6 Status is structured, not prose
+
+Anything a future tool or session must *act on* — closed, deprecated, superseded, invalid — must be a structured marker (frontmatter field, ledger column, overlay key) that consumers actually read. A prose note inside a registry or docstring ("this direction was abandoned") is an assertion nobody re-checks: it goes stale silently, and coverage tools can't see it, so the direction eventually gets reported as "never tried" and expensively re-explored.
+
 ---
 
 ## 2. Bootstrap (for projects with no existing `wiki/`)
@@ -96,15 +104,14 @@ wiki/
 ├── index.md                         # from templates/index.md
 ├── log.md                           # from templates/log.md
 ├── MAINTENANCE_ROUTING.md           # from templates/MAINTENANCE_ROUTING.md
+├── ONBOARDING.md                    # from templates/ONBOARDING.md (optional but cheap)
 ├── concepts/                        # empty, .gitkeep
 ├── experiments/                     # empty, .gitkeep
 ├── sources/                         # empty, .gitkeep
 └── architecture/                    # empty, .gitkeep
 ```
 
-`${SKILL_DIR}` here means the skill's installation directory. On this user's machine:
-- User-global: `C:\Users\adam\.claude\skills\wiki-management\templates\`
-- Plugin: derived from `${CLAUDE_PLUGIN_ROOT}/templates/`
+`${SKILL_DIR}` here means the skill's installation directory (user-global `~/.claude/skills/wiki-management/templates/`, or `${CLAUDE_PLUGIN_ROOT}/templates/` for a plugin install).
 
 **Read the template files first** with the Read tool (their actual content lives in this skill's `templates/` folder), then **Write** them into the project's `wiki/` paths. Do not paraphrase — copy faithfully; the SCHEMA.md content is itself the methodology reference.
 
@@ -114,7 +121,7 @@ After copying, edit one or two fields in the new `wiki/SCHEMA.md`:
 - Project-name placeholder → actual name
 - The "domain categories" example list → reflect the categories the user picked in §2.1
 
-Do not rewrite SCHEMA.md — its rules are project-agnostic. Only swap names.
+Do not rewrite SCHEMA.md — its rules are project-agnostic. Only swap names. The scale sections (§9–§12) stay dormant until their trigger conditions are met.
 
 ### 2.4 Seed `index.md` and `log.md`
 
@@ -214,6 +221,7 @@ Walk these in order:
 5. **Duplicate facts**: the same number or claim appearing verbatim in 2+ pages — pick one as the source of truth, replace the others with a `[[link]]`.
 6. **Index gaps**: pages on disk that are not listed in `wiki/index.md`.
 7. **Log gaps**: significant recent commits (`git log --since=14.days`) touching `wiki/` not reflected in `log.md`.
+8. **Prose-only status** (if §1.6 markers are adopted): deprecation/closure recorded only as prose, with no structured marker a tool can read.
 
 Output a categorized report. Do **not** auto-fix; ask the user to triage.
 
@@ -223,39 +231,42 @@ A page exceeding ~500 lines OR covering >2 distinct sub-topics should be split. 
 
 ---
 
-## 6. Optional advanced: event-routing & dependency declarations
+## 6. Scale features: event routing, enforcement, ledgers, generated pages
 
-These two patterns are heavier and pay off only when:
-- The project has **many** moving pieces (10+ scripts that produce wiki content automatically)
-- Drift between source code and wiki has already been a recurring pain point
-
-If neither applies, **skip this section** — basic Ingest/Query/Lint is enough.
+These patterns are heavier and pay off only when their trigger conditions are met. If none applies, **skip this section** — basic Ingest/Query/Lint is enough. Full specs live in templates/SCHEMA.md §9–§12; the operating machinery is documented in `docs/maintenance-mechanisms.md` with reference implementations in `tools/`.
 
 ### 6.1 Event-routing table (`MAINTENANCE_ROUTING.md`)
 
-When the same kind of event ("ship a new version", "add a new factor", "fix a bug") consistently requires updating multiple files in lockstep, codify it as a routing table. Each row = one file; columns = which event triggers it, which layer, who updates it, and whether it's mandatory.
+**Adopt when**: the same kind of event ("ship a new version", "add a data source", "fix a bug") keeps requiring updates to the same group of files, and steps keep getting missed.
 
-The bootstrap copies a minimal `templates/MAINTENANCE_ROUTING.md` with one example event. Expand as patterns emerge.
+Each row = one file; columns = event, layer, how to update, mandatory?. As the table matures, add two more columns per the template: **Symptom if skipped** (turns the table into a reverse diagnostic index) and **Backstop** (which automated check catches the omission — and which rows have no net).
 
-### 6.2 §5 frontmatter on skill files
+Multi-step events (releases, migrations) additionally get: a **numbered checklist in strict order**, an **automatic safety-nets block** (backstops, not replacements), and a final **restart-the-long-lived-processes** step — configuration is not "in effect" until the process that loaded the old config restarts.
 
-If the project's own `.claude/skills/` contains skills that *consume* wiki pages or *produce* outputs into wiki, declare dependencies in skill frontmatter:
+### 6.2 Dependency frontmatter + enforcement layers
 
-```yaml
----
-name: my-skill
-description: ...
-consumes:
-  - wiki/concepts/error-handling.md
-  - some/code/file.py
-produces:
-  - wiki/experiments/*.md
-load_bearing_for:
-  - .claude/skills/other-skill/skill.md
----
-```
+**Adopt when**: 10+ skills/scripts read or write wiki content and "changed X, forgot Y" has bitten twice.
 
-The skill's `templates/SCHEMA.md` describes the full convention in §5. This system is **opt-in** — only adopt it when manual back-reference tracking starts failing.
+Executable docs declare `consumes / produces / upstream_skills / downstream_skills / load_bearing_for` in frontmatter (spec: SCHEMA §9). Three cost-controls: declare load-bearing only; one-way declarations (reverse views are script-derived); frontmatter is the SSOT, derived tables are DO-NOT-EDIT.
+
+A written rule alone decays — enforcement is four-layered, each backstopping the last:
+A (the written rule) → B (PostToolUse hook prints a draft the instant a skill is created; `tools/scan_skill_dependencies.py`) → C (Stop hook blocks session end for unregistered *new* skills; `tools/check_new_skills_registered.py`) → D (nightly drift detector; `tools/check_dependency_drift.py`).
+
+### 6.3 Append-only ledgers + query-before-explore
+
+**Adopt when**: "didn't we already try this?" has no provable answer.
+
+Keep `release_history.jsonl` (what shipped) and `hypothesis_history.jsonl` (**every** exploration — hypothesis, result, failure reason). Rules: append-only, corrections by superseding row or overlay key (never in-place edits); every exploration-type workflow **queries the ledger before starting**; record *why* something was closed, not just that it was (SCHEMA §10).
+
+### 6.4 Generated wiki pages over machine data
+
+**Adopt when**: conclusions that exist only in machine ledgers keep being invisible to humans.
+
+Generators render summary pages into the wiki under three rules (SCHEMA §11): format derives from the wiki's existing page types; **regenerate-without-clobber** for hand-written sections; **self-disclosure** — a generated page states what its own emptiness means ("no records ≠ nobody tried").
+
+### 6.5 Navigation layer
+
+**Adopt when**: new sessions keep re-deriving context. Add `ONBOARDING.md` (template provided — starts with a copy-paste first-message block and an SSOT warning header), then `USAGE_MANUAL.md` (scenario → command) and `SKILL_ROUTING.md` (trigger → skill) as the pain appears (SCHEMA §12).
 
 ---
 
@@ -266,6 +277,9 @@ The skill's `templates/SCHEMA.md` describes the full convention in §5. This sys
 3. **Mixing L1 / L2 / L3** — never put a number directly into a narrative page if that number lives in an L1 ledger. Link instead.
 4. **Asking the user to write the page** — wiki is LLM-maintained. The user gives raw material; you produce the page. They review.
 5. **Letting `log.md` grow unstructured** — one line per event, reverse chronological, no exceptions. If something needs more than a sentence, that something belongs in `experiments/` or `concepts/`.
+6. **Status as prose** — "this is deprecated" written in a paragraph instead of a structured marker. Tools can't see prose; the direction gets re-explored later (§1.6).
+7. **Editing ledger history** — fixing a wrong row in place desynchronizes every consumer. Append a superseding row or overlay record.
+8. **A generator that clobbers human sections** — the second run wipes someone's verdict paragraph, and the pages stop being trusted. Regenerate-without-clobber or don't generate.
 
 ---
 
@@ -276,8 +290,12 @@ The skill's `templates/SCHEMA.md` describes the full convention in §5. This sys
 | User starts a session with no `wiki/` | §2 Bootstrap |
 | User feeds new material | §3 Ingest — classify, host page, cross-ref, neighbors, index, log |
 | User asks a project question | §4 Query — read `index.md` first, then candidate pages, cite sources |
-| User asks for cleanup | §5 Lint — 7-item checklist, report, don't auto-fix |
-| User has 10+ scripts producing wiki content | §6 Advanced: routing table + skill frontmatter |
+| User asks for cleanup | §5 Lint — 8-item checklist, report, don't auto-fix |
+| Same multi-file event keeps getting half-done | §6.1 routing table (+ symptom & backstop columns) |
+| 10+ producers/consumers, drift has bitten | §6.2 frontmatter + 4-layer enforcement |
+| "Didn't we try this already?" | §6.3 ledgers + query-before-explore |
+| Machine conclusions invisible to humans | §6.4 generated pages (no-clobber, self-disclosing) |
+| New sessions re-derive context every time | §6.5 ONBOARDING.md |
 | User asks a question whose answer is in code | Read code (current state), cite wiki only for *why* / history |
 
 ---
