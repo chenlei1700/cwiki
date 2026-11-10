@@ -159,6 +159,30 @@ Three rules for the gates themselves, each paid for in incidents:
 2. **Derive allow-lists from the consumer, don't hand-write them**: any hand-maintained list of "valid fields / files / events" is already behind the consumer it describes. Export it from the consuming code, or assert against the consumer's real query.
 3. **Report evidence, not booleans**: a drift report that prints *which* reference broke and *what the fix command is* gets acted on; a bare "3 violations" gets ignored.
 
+## Mechanism 7 — the distillation loop (context budget)
+
+**Pain**: the always-loaded `CLAUDE.md` grew to 3× what the harness comfortably injects, because every session appended its war story at always-loaded price. (Source project: 329KB → 111KB in two distillation batches; target steady state ~50KB.)
+
+Moving parts (spec: templates/SCHEMA.md §13):
+
+1. **Budget lines**, two per always-loaded doc (lessons-section budget + whole-file budget under the harness's warning threshold), checked nightly. The numbers are pinned judgment calls — the config comment says so.
+2. **Entry-form gate**: dated entries added after a cutoff date must be "one line + pointer" (size caps on the single entry). Non-retroactive — history belongs to the distillation backlog, and gating it on day one kills adoption. This catches a single mis-tiered 3KB entry the next morning; the budget line alone would let it hide for months.
+3. **Distillation SOP runs interactively, never headless** — it makes editorial judgments (what is a caveat vs. filler). Ledger every retirement (`distill_ledger.jsonl`); **spot-check read-back** of 2 random originals against the synthesis is the human gate: a dropped caveat is a silent failure, because archives exist but nobody reads them.
+4. Retirement has **two modes** — standalone fragments become pointer + archived original; fragments embedded in composite narratives get synthesized-only (original untouched until the whole entry retires). Forcing mode 1 everywhere mangles narratives; forcing mode 2 everywhere never shrinks the file.
+
+## Mechanism 8 — external assistant-memory sovereignty
+
+**Pain**: the assistant's private memory directory (not in git, not browsable, lost on reinstall) accumulated unique facts found nowhere else — a single point of failure holding real knowledge.
+
+**Principle: facts live in the wiki; external memory holds only a pointer + a few "how to apply" lines.** Memory is a cache keyed for recall, not a store of record.
+
+Migration of the existing backlog can be automated with a headless-LLM driver, but **the driver owns safety, not the LLM** — the memory text fed into the prompt is treated as *untrusted data* (prompt-injection defense does not run on trust, even for text you wrote yourself):
+
+1. **Backup first** — copy the original into a git-tracked folder before anything runs; every migration is reversible.
+2. **Mechanical acceptance** — the LLM's "MIGRATED" claim counts for nothing. The driver verifies: the claimed page path matches a **whitelist regex** (three wiki directories, no traversal, no odd characters); the page exists; page bytes ≥ a fidelity floor of the original (anti-summarization — facts must survive, not be abstracted); the memory file was rewritten to a pointer under a size cap with frontmatter intact.
+3. **Write-surface delta gate** — snapshot `git status` + the memory directory before and after the LLM run; any change inside the *watched* surface (wiki + code dirs, minus machine-churn subtrees that other processes write nightly) beyond the claimed page, or any memory file other than the target, fails the run with the stray paths named. A claimed "SKIPPED" goes through the same gate. Known blind spot (documented, accepted): a file already dirty before the run that gets further edits doesn't show in the status-set diff.
+4. **Fail → rollback from backup + mark failed, visibly.** A nightly batch of 2-3 small files clears a backlog in weeks; big files stay interactive (quality over throughput).
+
 ---
 
 ## Operations calendar
@@ -167,9 +191,12 @@ Three rules for the gates themselves, each paid for in incidents:
 |---|---|---|
 | On write (hooks) | frontmatter nudge; Stop-block for unregistered new skills | 3B, 3C |
 | On commit (pre-commit) | `sync --check` (stale L2 blocks commit); large-file guard | 1, 6 |
-| Nightly | daily L1 appends; sync regenerate; drift detector; freshness tiers | 2, 1, 3D, 4 |
+| Nightly | daily L1 appends; sync regenerate; drift detector; freshness tiers; mechanized wiki lint (budgets, entry form, fingerprints, tombstones, topics, big untracked files — see `tools/wiki_lint_skeleton.py`); memory-migration batch | 2, 1, 3D, 4, 7, 8 |
 | On release (routing E5) | ordered checklist + safety nets + process restarts | routing table |
+| When over budget | interactive distillation SOP + spot-check read-back | 7 |
 | Weekly / on demand | LLM Lint (orphans, dangling links, stale tentative, duplicate facts) | 0 |
+
+**Guard the guards**: the nightly lint's own result goes into the pipeline's report (so a crashed lint is visible, not silent), and every check ships a `--selftest` with fault injections that runs inside the project's normal test suite — whoever breaks a check's judgment gets a red test, not a quietly green night.
 
 ## Failure-mode index
 
@@ -183,3 +210,8 @@ Three rules for the gates themselves, each paid for in incidents:
 | Config change "didn't take effect" | long-lived process never restarted | Mechanism 4, rule 4 |
 | Generated page wiped human notes | generator missing clobber protection | Mechanism 5 |
 | A direction everyone 'knows' is dead gets re-explored | verdict existed only as prose / only in ledger | Mechanisms 2.4 + 5 |
+| `CLAUDE.md` keeps growing; sessions pay for it every turn | content mis-tiered (atomic facts at always-loaded price) | Mechanism 7; SCHEMA §13 |
+| Two pages disagree about current state, both look authoritative | no supersedes/tombstone, freshness resolved by vibes | SCHEMA §15 ordering |
+| A deleted page reappears | generator never consulted the tombstone registry | SCHEMA §15.2 resurrection check |
+| Unique facts live only in assistant memory | storage sovereignty not enforced | Mechanism 8 |
+| Headless migration "succeeded" but a page is a summary | acceptance trusted the LLM's claim | Mechanism 8.2 fidelity floor |

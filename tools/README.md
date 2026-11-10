@@ -11,6 +11,7 @@ Generic, sanitized versions of the maintenance machinery described in
 | [`scan_skill_dependencies.py`](scan_skill_dependencies.py) | 3B — bootstrap / nudge | Emits draft dependency frontmatter per skill from regex heuristics. Never edits skill.md; drafts go to `wiki/_dependency_drafts/` or stdout |
 | [`check_new_skills_registered.py`](check_new_skills_registered.py) | 3C — Stop hook | Blocks session end if a skill *created this session* lacks dependency frontmatter. Legacy files never block |
 | [`check_dependency_drift.py`](check_dependency_drift.py) | 3D — nightly detector | Unregistered files (grace period) / dead declarations (hard error, exit 1) / reverse asymmetry (info) |
+| [`wiki_lint_skeleton.py`](wiki_lint_skeleton.py) | 7 + §13/§15/§16 — nightly lint | Starter mechanized lint: budgets, entry-form gate, supersedes/tombstones + resurrection, big untracked files, topic-registry shape. Pure-function judgments + `--selftest` with 18 fault injections — grow your own checks onto this pattern |
 
 ## Wiring
 
@@ -39,6 +40,16 @@ Nightly (cron / end-of-day pipeline):
 ```bash
 python scripts/maintenance/sync_views_example.py          # self-heal L2
 python scripts/maintenance/check_dependency_drift.py      # drift report (exit 1 on hard errors)
+python scripts/maintenance/wiki_lint_skeleton.py          # mechanized wiki lint (exit 1 on violations)
+```
+
+Guard the guards: wire each tool's `--selftest` into your normal test suite, e.g.
+
+```python
+@pytest.mark.parametrize("tool", ["scripts/maintenance/wiki_lint_skeleton.py", ...])
+def test_selftest_green(tool):
+    r = subprocess.run([sys.executable, tool, "--selftest"], capture_output=True, text=True)
+    assert r.returncode == 0 and "OK" in r.stdout   # content assert defeats an empty selftest
 ```
 
 ## Two rules before trusting any of these gates

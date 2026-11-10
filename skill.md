@@ -233,7 +233,7 @@ A page exceeding ~500 lines OR covering >2 distinct sub-topics should be split. 
 
 ## 6. Scale features: event routing, enforcement, ledgers, generated pages
 
-These patterns are heavier and pay off only when their trigger conditions are met. If none applies, **skip this section** — basic Ingest/Query/Lint is enough. Full specs live in templates/SCHEMA.md §9–§12; the operating machinery is documented in `docs/maintenance-mechanisms.md` with reference implementations in `tools/`.
+These patterns are heavier and pay off only when their trigger conditions are met. If none applies, **skip this section** — basic Ingest/Query/Lint is enough. Full specs live in templates/SCHEMA.md §9–§16; the operating machinery is documented in `docs/maintenance-mechanisms.md` with reference implementations in `tools/`.
 
 ### 6.1 Event-routing table (`MAINTENANCE_ROUTING.md`)
 
@@ -268,6 +268,22 @@ Generators render summary pages into the wiki under three rules (SCHEMA §11): f
 
 **Adopt when**: new sessions keep re-deriving context. Add `ONBOARDING.md` (template provided — starts with a copy-paste first-message block and an SSOT warning header), then `USAGE_MANUAL.md` (scenario → command) and `SKILL_ROUTING.md` (trigger → skill) as the pain appears (SCHEMA §12).
 
+### 6.6 Context budget & distillation
+
+**Adopt when**: an always-loaded doc (`CLAUDE.md` etc.) outgrows what the harness comfortably injects. Classify content by **injection tier** (always-loaded / scene-loaded / atomic / raw truth — orthogonal to L1/L2/L3), set explicit byte budgets with a nightly check, and run the distillation SOP interactively when over: cluster by theme → UPDATE>MERGE>CREATE into pages → two-mode retirement (pointer+archive, or synthesize-only for embedded fragments) → distill ledger → **spot-check read-back** (the non-mechanizable human gate). A per-entry form gate ("new dated entries = one line + pointer", non-retroactive cutoff) catches mis-tiered writes the next morning instead of months later (SCHEMA §13).
+
+### 6.7 Contradiction structure
+
+**Adopt when**: corrections overwrite history, or two sessions' conflicting conclusions resolve as "last writer wins". Synthesis pages carry fixed `Evolution trail` / `Open contradictions` sections; contradictions land there *before* the body changes; merges keep both claims; corrections back-mark the original (SCHEMA §14).
+
+### 6.8 Freshness arbitration (fingerprints / supersedes / tombstones)
+
+**Adopt when**: concurrent sessions make "which page is current?" unanswerable. Pages declare load-bearing evidence in `sources:` frontmatter (artifact sha256 vs narrative-grade commit — two grades, never mixed; nightly 3-state check). Replacement declares `supersedes:` and the old page gets a tombstone banner; deleted pages enter a tombstone registry with **resurrection detection**. "Which is newest" follows a fixed ordering: derived view → filename semantics → tombstone/supersedes → `git log -1`; never mtime (SCHEMA §15).
+
+### 6.9 Topic layer
+
+**Adopt when**: "mention a topic → locate content / progress / history / sessions / code" has no single entry point. A small registry (`_topics.json`: name/aliases/status/anchors) is the only stored truth; the five-column answer is **derived at query time** by walking anchors. A `check-new` near-miss gate (topic-level fuzzy match) prevents duplicate topics; orphan pages get listed, not blocked (SCHEMA §16).
+
 ---
 
 ## 7. Anti-patterns to avoid
@@ -296,6 +312,10 @@ Generators render summary pages into the wiki under three rules (SCHEMA §11): f
 | "Didn't we try this already?" | §6.3 ledgers + query-before-explore |
 | Machine conclusions invisible to humans | §6.4 generated pages (no-clobber, self-disclosing) |
 | New sessions re-derive context every time | §6.5 ONBOARDING.md |
+| `CLAUDE.md` / always-loaded docs keep growing | §6.6 budgets + distillation SOP + entry-form gate |
+| Corrections overwrite history; "last writer wins" | §6.7 contradiction structure |
+| Can't tell which of two pages is current | §6.8 fingerprints / supersedes / tombstones |
+| "Topic X — where's everything about it?" | §6.9 topic layer (registry + derived view) |
 | User asks a question whose answer is in code | Read code (current state), cite wiki only for *why* / history |
 
 ---

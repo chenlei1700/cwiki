@@ -13,7 +13,7 @@ The methodology is distilled from running a multi-year quant research wiki in pr
 - **`[[name]]` cross-references** — Obsidian-compatible. Bi-directional back-references are enforced by the Ingest flow.
 - **Event-routing table** — `MAINTENANCE_ROUTING.md` maps "this kind of change" → "exactly these files must be updated", with **symptom-if-skipped** and **backstop** columns that turn it into a reverse diagnostic index.
 - **Ingest / Query / Lint** as three named operations the skill drives end-to-end.
-- **Scale features (opt-in, each with an explicit adoption trigger)** — dependency frontmatter with 4-layer enforcement, append-only ledgers with query-before-explore, auto-generated pages with no-clobber + self-disclosure rules, and a navigation layer (`ONBOARDING.md` etc.).
+- **Scale features (opt-in, each with an explicit adoption trigger)** — dependency frontmatter with 4-layer enforcement, append-only ledgers with query-before-explore, auto-generated pages with no-clobber + self-disclosure rules, a navigation layer (`ONBOARDING.md` etc.), context budgets + a distillation SOP for always-loaded docs, contradiction structure (evolution trail / open contradictions), freshness arbitration (sources fingerprints, supersedes + tombstones, a fixed newest-truth ordering), and a topic layer that stitches pages/ledgers/log/code behind one lookup key.
 
 **The machinery** (docs/ + tools/):
 
@@ -64,7 +64,7 @@ The skill is **opt-in** — it only activates on those trigger phrases. It will 
 .
 ├── skill.md                       # main instructions (§0–§9)
 ├── templates/
-│   ├── SCHEMA.md                  # the rule book — core §1–§8 + scale features §9–§12
+│   ├── SCHEMA.md                  # the rule book — core §1–§8 + scale features §9–§16
 │   ├── index.md                   # starter table of contents
 │   ├── log.md                     # ops log format
 │   ├── MAINTENANCE_ROUTING.md     # event → file list table (+ symptom/backstop columns,
@@ -84,7 +84,8 @@ The skill is **opt-in** — it only activates on those trigger phrases. It will 
 │   ├── sync_views_example.py
 │   ├── scan_skill_dependencies.py
 │   ├── check_new_skills_registered.py
-│   └── check_dependency_drift.py
+│   ├── check_dependency_drift.py
+│   └── wiki_lint_skeleton.py      # starter mechanized nightly lint (5 checks + selftest)
 └── README.md
 ```
 
@@ -101,6 +102,7 @@ A few non-obvious decisions worth knowing about:
 
 ## Changelog
 
+- **v3 (2026-11)** — memory-governance sync from the source project (informed by studying TencentDB-Agent-Memory and NVIDIA auto-ontology, then battle-testing in production): SCHEMA §13 context budgets + distillation SOP (injection tiers, two-mode retirement, distill ledger, spot-check read-back, entry-form gate); §14 contradiction structure (evolution trail / open contradictions, no last-writer-wins, correction back-marks); §15 freshness arbitration (`sources:` fingerprints with 3-state nightly check, `supersedes:` + tombstone registry with resurrection detection, fixed newest-truth ordering); §16 topic layer (small registry + derived five-column view + near-miss gate); Mechanisms 7 (distillation loop) and 8 (external assistant-memory sovereignty — facts live in the wiki, memory holds pointers; headless migration driver pattern with mechanical acceptance, fidelity floor, path whitelist and write-surface delta gate); `tools/wiki_lint_skeleton.py` (starter mechanized lint, 5 checks, pure-function judgments, 18-injection `--selftest`); "guard the guards" wiring notes.
 - **v2 (2026-10)** — synced from the source project's evolved design: SCHEMA scale features §9–§12 (dependency frontmatter + 4-layer enforcement; machine ledgers + overlay corrections; generated pages with no-clobber + self-disclosure; navigation layer), routing-table v2 patterns (symptom/backstop columns, ordered checklists + safety nets, forbidden actions, who-reads-what appendix), `ONBOARDING.md` template, `docs/maintenance-mechanisms.md`, `tools/` reference implementations, `.gitattributes` (LF normalization).
 - **v1 (2026-05)** — initial release: 3-layer model, 5 categories, routing table, Ingest/Query/Lint.
 
