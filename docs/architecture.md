@@ -130,6 +130,7 @@ and periodic LLM lint for what mechanical checks can't see.
 | [skill.md](../skill.md) | the LLM, at trigger time | operator manual: Bootstrap / Adoption / Ingest / Query / Lint flows |
 | [templates/SCHEMA.md](../templates/SCHEMA.md) | copied into each project; read by LLM + humans | the rulebook the project's wiki runs under (core §1–§8, scale §9–§16) |
 | [templates/](../templates/) others | copied at bootstrap | starters: index, log, routing table, onboarding, page types |
+| [workflows.md](workflows.md) | anyone operating day-to-day | 12 scenario walkthroughs: lookup x4, update x8, unique capabilities step-marked |
 | [maintenance-mechanisms.md](maintenance-mechanisms.md) | humans wiring automation | the 8 mechanisms, operations calendar, failure-mode index |
 | [tools/](../tools/README.md) | copied into `scripts/maintenance/` | reference gates: sync `--check`, drift detector, Stop-hook, lint skeleton |
 | this file | humans evaluating or learning the system | the why and the map |

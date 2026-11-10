@@ -7,6 +7,43 @@
 
 方法论蒸馏自一个多年期量化研究项目的生产实践（40+ skills、夜间流水线、append-only 账本），再泛化为项目无关。代码项目、研究实验室、事故复盘档案、个人笔记库——凡是想让 LLM 替你组织和交叉引用知识的场景都适用。
 
+## 文档索引
+
+| 我想…… | 读 |
+|---|---|
+| 判断该不该用这套（跟 star 更多的比） | 本页下一节「为什么是 cwiki」 |
+| 理解设计与方法论（为什么长这样） | [docs/architecture.zh.md](docs/architecture.zh.md) |
+| 安装（装法/验证/升级/排障） | [INSTALL.zh.md](INSTALL.zh.md) |
+| 跑起来：新项目 / 既有项目 | 本页「使用——两种起步场景」 |
+| **日常怎么查、怎么更**（12 个分场景流程） | [docs/workflows.zh.md](docs/workflows.zh.md) ⭐ |
+| 接自动化（同步/闸门/夜检） | [docs/maintenance-mechanisms.zh.md](docs/maintenance-mechanisms.zh.md) + [tools/](tools/README.md) |
+| 查规则细节 | [templates/SCHEMA.md](templates/SCHEMA.md)（英文） |
+| skill 的具体行为 | [skill.md](skill.md)（英文） |
+
+## 为什么是 cwiki
+
+Star 更多的工具解决的是**别的问题**——先对号入座：
+
+| 你可能在比较 | 它解决什么 | 它不管、而 cwiki 管的 |
+|---|---|---|
+| mem0 / Letta(MemGPT) / Zep 等 agent-memory 库 | 给**你开发的应用**提供运行时记忆 API（存向量库/DB） | **你和 LLM 结对开发的项目本身**的知识：人要读、要进 git 被 diff 审查、要跨月不腐。它们不落 markdown，也不治理内容真实性 |
+| Obsidian / Logseq | 人手维护的个人知识管理 | 维护者是 LLM 时的失控：谁可以改哪个文件、复制漂移、LLM 宣称的核验。cwiki 的 `[[]]` 与 Obsidian 兼容——可以拿 Obsidian 当浏览器，两者共存 |
+| MkDocs / Docusaurus / GitHub Wiki | 把文档渲染成好看的站点 | 内容本身**真不真、新不新**：发布层不检查"当前状态文档与现实矛盾"。cwiki 的产出是纯 markdown，可以直接喂给它们渲染 |
+| Notion 等 SaaS wiki | 托管协作文档 | 数据在自己手里；LLM 的每次改动可 git diff 审查；能接 pre-commit / 夜检闸门 |
+| TencentDB-Agent-Memory / NVIDIA auto-ontology | 对话记忆抽取与本体治理（服务端） | 同为记忆治理，但形态是服务 + DB；cwiki v3 已把两者值得吸收的点（容量倒逼合并、变更闸门、墓碑、写后回读）消化成 markdown + git 形态 |
+
+cwiki 独有的七个能力（⭐，各自指向出处；[workflows](docs/workflows.zh.md) 里逐场景标注它们在哪一步起作用）：
+
+1. **修改权被执法**——L1/L2/L3 "谁可以编辑这个文件"不是口头约定，是同步脚本 + 闸门强制的（SCHEMA §3）；
+2. **纪律变闸门 + 守门员被守**——每条规则是会变红的检查，每个检查带故障注入 `--selftest` 并跑进回归（Mechanism 6、`wiki_lint_skeleton.py`）；
+3. **蒸馏回路**——专治 LLM 结对特有的"常驻上下文膨胀"（CLAUDE.md 预算线 + 单条形态闸 + 蒸馏 SOP + 抽查比读）。上面任何竞品都没有这个问题意识（SCHEMA §13）；
+4. **新旧仲裁**——多会话并发下"哪份是最新"有固定裁决顺序 + sources 指纹三态 + 墓碑与复活检测（SCHEMA §15）；
+5. **探索前查账**——append-only 假设账本让"这个试过没有"有可证明的答案，失败原因与失败本身分开记（SCHEMA §10）；
+6. **话题层**——"关于 X 的一切"一个键拉出 内容/进度/历史/会话/代码 五栏（SCHEMA §16）;
+7. **零依赖零服务**——纯 markdown + git + 标准库 Python。没有向量库、没有 SaaS、没有锁定：删掉 skill，你的 wiki 照常活着。
+
+**什么时候别用 cwiki**（诚实分流）：要给应用接运行时记忆 API → mem0/Letta/Zep；只要漂亮文档站 → Docusaurus；纯个人手写笔记 → Obsidian 就够。cwiki 的目标用户是**长期用 Claude Code 这类 LLM 结对开发、知识主要由 LLM 产出与维护的项目**——在这个场景里，上面七条每一条都对应一种已经付过学费的腐烂方式（见 [architecture §1](docs/architecture.zh.md)）。
+
 ## 你会得到什么
 
 **方法论**（skill.md + templates/）：
@@ -20,6 +57,7 @@
 
 **机器**（docs/ + tools/）：
 
+- [`docs/workflows.zh.md`](docs/workflows.zh.md) —— **实战流程**：查找 4 场景（历史结论 / 当前状态 / 话题全貌 / 探索查重）+ 更新 8 场景（ingest / 实验落档 / 矛盾 / 订正 / 发布 / 记教训 / 取代删除 / 红灯处置），每场景标注独有能力在哪一步起作用。
 - [`docs/architecture.zh.md`](docs/architecture.zh.md) —— 读者总览：问题定义、两根正交轴（修改权 × 注入档位）、方法论七条承诺、组件地图、项目生命周期、明示的局限。**想理解这套系统，从这份读起**；下面几份是拿来操作它的。
 - [`docs/maintenance-mechanisms.zh.md`](docs/maintenance-mechanisms.zh.md) —— 完整运转图景：L1→L2 同步契约、append-only 账本、hook 执法（PostToolUse / Stop / pre-commit / 夜检）、新鲜度分级、生成页规则、"纪律变闸门"、运维日历、症状→根因故障索引。
 - [`tools/`](tools/README.md)（英文） —— 通用参考实现：`sync_views_example.py`（L1→L2 同步，`--check` 接 pre-commit）、`scan_skill_dependencies.py`（frontmatter 草稿生成）、`check_new_skills_registered.py`（Stop-hook 闸）、`check_dependency_drift.py`（夜间漂移检测）、`wiki_lint_skeleton.py`（机械化 lint 骨架，5 检 + 18 例注入自检）。
@@ -92,6 +130,7 @@ skill 是**按需触发**的——只在上述触发语上激活，日常工作�
 │   └── page_types/                # concept / experiment / source / architecture / domain_entity
 ├── docs/
 │   ├── architecture.zh.md / .md   # 读者总览：中文 / 英文 — 先读这份
+│   ├── workflows.zh.md / .md      # 实战流程：12 个分场景（查 4 + 更 8），独有能力逐步标注
 │   └── maintenance-mechanisms.zh.md / .md   # 维护机器：中文 / 英文
 ├── tools/                         # 参考实现（拷走 + 改 CONFIG 块；英文）
 │   ├── README.md
@@ -116,6 +155,7 @@ skill 是**按需触发**的——只在上述触发语上激活，日常工作�
 
 ## 更新日志
 
+- **v3.3 (2026-11)** —— 定位与可用性：README 加「为什么是 cwiki」（与 mem0/Letta/Zep、Obsidian、Docusaurus、SaaS wiki、腾讯/NVIDIA 记忆系统的诚实对比 + 七条独有能力 + 什么时候别用它）与「文档索引」；新增 docs/workflows（双语）——12 个分场景实战流程（查找 4 + 更新 8），独有能力逐步 ⭐ 标注。
 - **v3.2 (2026-11)** —— 双语化：中文成为默认展示（README.md、INSTALL.zh.md、docs/*.zh.md），英文版保留为 README.en.md 及原路径；操作件保持英文单一版本（判据只留一份）。
 - **v3.1 (2026-11)** —— 双场景使用路径（§2B Adoption：盘点→共存→双车道渐进迁移→闸门按触发上）；INSTALL.md 详细安装指南；docs/architecture.md 读者总览。
 - **v3 (2026-11)** —— 记忆治理回流（调研 TencentDB-Agent-Memory 与 NVIDIA auto-ontology 后在生产中实测）：SCHEMA §13 上下文预算 + 蒸馏 SOP（注入档位、两档退役、蒸馏账本、抽查比读、单条形态闸）；§14 矛盾结构化；§15 新旧仲裁（sources 指纹三态、supersedes + 墓碑与复活检测、固定"判最新"排序）；§16 话题层；Mechanism 7（蒸馏回路）与 8（外部 assistant-memory 主权 + 无头迁移驱动的机械验收模式）；`tools/wiki_lint_skeleton.py`；"守门员也要被守"接线说明。

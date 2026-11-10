@@ -90,6 +90,7 @@ project/
 | [skill.md](../skill.md) | LLM，触发时 | 操作手册：Bootstrap / Adoption / Ingest / Query / Lint 流程 |
 | [templates/SCHEMA.md](../templates/SCHEMA.md) | 拷进各项目；LLM + 人共读 | 该项目 wiki 运行于其下的规则书（核心 §1–§8，规模 §9–§16） |
 | [templates/](../templates/) 其余 | bootstrap 时拷贝 | 起步件：index、log、路由表、onboarding、页面类型 |
+| [workflows.zh.md](workflows.zh.md) | 日常操作者 | 12 个分场景流程：查 4 + 更 8，独有能力逐步标注 |
 | [maintenance-mechanisms.zh.md](maintenance-mechanisms.zh.md) | 接线自动化的人 | 8 个机制、运维日历、故障索引 |
 | [tools/](../tools/README.md) | 拷进 `scripts/maintenance/` | 参考闸门：sync `--check`、漂移检测、Stop-hook、lint 骨架 |
 | 本文 | 评估或学习这套系统的人 | 为什么，以及地图 |
