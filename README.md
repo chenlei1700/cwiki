@@ -22,7 +22,11 @@ The methodology is distilled from running a multi-year quant research wiki in pr
 
 ## Install
 
-Pick one of the two install modes.
+Quick version below — **[INSTALL.md](INSTALL.md) has the detailed guide**:
+mode trade-offs (global vs per-project vs no-git copy, shadowing rules),
+post-install verification, vendoring vs submodule for team repos, what is and
+isn't auto-active (tools need wiring), updating each install mode, a
+troubleshooting table, and uninstall.
 
 ### Mode A — user-global (available in every project)
 
@@ -43,7 +47,9 @@ The folder name (`wiki-management`) becomes the skill name. Rename if you prefer
 git clone https://github.com/chenlei1700/cwiki .claude/skills/wiki-management
 ```
 
-Then commit the `.claude/skills/wiki-management/` directory along with your project, so anyone cloning your project gets the skill too.
+Then vendor it (remove its `.git`, commit the files) so anyone cloning your project gets the skill too — details and the submodule alternative in [INSTALL.md §1](INSTALL.md).
+
+After installing, **start a new session** (skills are picked up at session start) and verify per [INSTALL.md §2](INSTALL.md).
 
 ## Use — two starting scenarios
 
@@ -79,6 +85,7 @@ The skill is **opt-in** — it only activates on those trigger phrases. It will 
 ```
 .
 ├── skill.md                       # main instructions (§0–§9)
+├── INSTALL.md                     # detailed install / verify / update / troubleshoot
 ├── templates/
 │   ├── SCHEMA.md                  # the rule book — core §1–§8 + scale features §9–§16
 │   ├── index.md                   # starter table of contents
