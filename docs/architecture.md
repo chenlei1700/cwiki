@@ -1,5 +1,7 @@
 # cwiki — architecture & methodology
 
+> [中文（默认）](architecture.zh.md) | English - kept in sync; English is canonical where wording differs.
+
 What the system is, why it is shaped this way, and how the pieces relate.
 This is the *reader's* document. The operator's manual is [skill.md](../skill.md)
 (what the LLM does), the rulebook is [templates/SCHEMA.md](../templates/SCHEMA.md)

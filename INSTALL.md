@@ -1,7 +1,9 @@
 # Installing cwiki (wiki-management skill)
 
+> [中文（默认）](INSTALL.zh.md) | English - kept in sync; English is canonical where wording differs.
+
 Step-by-step install, verification, update and troubleshooting. The quick version
-lives in [README § Install](README.md#install); this file is the detailed one.
+lives in [README § Install](README.en.md#install); this file is the detailed one.
 
 ## 0. Prerequisites
 
@@ -101,7 +103,7 @@ docs). Two things are deliberately *not* active until you wire them:
   triggers are met. Installing everything on day one is the documented
   anti-pattern, not a shortcut.
 
-Then say the first message for your scenario (README § Use): `bootstrap wiki`
+Then say the first message for your scenario (README.en.md § Use): `bootstrap wiki`
 for a fresh project, `adopt wiki` for a project that already has docs.
 
 ## 4. Updating

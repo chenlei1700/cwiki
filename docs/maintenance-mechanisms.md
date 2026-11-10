@@ -1,5 +1,7 @@
 # How the wiki stays alive — management, sync & update mechanisms
 
+> [中文（默认）](maintenance-mechanisms.zh.md) | English - kept in sync; English is canonical where wording differs.
+
 This document describes the full operating machinery behind an LLM-maintained wiki, distilled from a multi-year quant research project where the system runs in production (40+ skills, nightly pipelines, append-only ledgers with ~10⁵–10⁶ rows). The templates in `templates/` give you the *rules*; this document gives you the *moving parts* that keep the rules true over months.
 
 Everything here is incremental: a fresh project needs only Mechanism 0. Each later mechanism states the pain that justifies adopting it.
