@@ -17,6 +17,7 @@ The methodology is distilled from running a multi-year quant research wiki in pr
 
 **The machinery** (docs/ + tools/):
 
+- [`docs/architecture.md`](docs/architecture.md) — the reader's overview: the problem, the two orthogonal dimensions (modification rights x injection tiers), the seven methodology commitments, component map, project lifecycle, and stated limits. Start here to understand the system; the files below are for operating it.
 - [`docs/maintenance-mechanisms.md`](docs/maintenance-mechanisms.md) — the full operating picture: L1→L2 sync contract, append-only ledgers, hook-based enforcement (PostToolUse / Stop / pre-commit / nightly), freshness tiers, generated-page rules, "discipline becomes gates", an operations calendar, and a symptom→cause failure index.
 - [`tools/`](tools/README.md) — generic reference implementations: `sync_views_example.py` (L1→L2 sync with `--check` for pre-commit), `scan_skill_dependencies.py` (frontmatter draft generator), `check_new_skills_registered.py` (Stop-hook gate), `check_dependency_drift.py` (nightly drift detector).
 
@@ -100,6 +101,7 @@ The skill is **opt-in** — it only activates on those trigger phrases. It will 
 │       ├── architecture.md
 │       └── domain_entity.md       # flexible template for project-specific entities
 ├── docs/
+│   ├── architecture.md            # the why and the map — read this first
 │   └── maintenance-mechanisms.md  # how the wiki stays alive: sync, hooks, ledgers,
 │                                  #   drift detection, generated pages, gates
 ├── tools/                         # reference implementations (copy + customize CONFIG blocks)
