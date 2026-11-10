@@ -4,7 +4,7 @@
 
 Format: `## [YYYY-MM-DD] <verb> | <short description>`
 
-Verbs: `bootstrap`, `ingest`, `add`, `update`, `deprecate`, `lint`, `fix`, `decision`, `experiment`, `methodology`
+Verbs: `bootstrap`, `adopt`, `ingest`, `add`, `update`, `deprecate`, `lint`, `fix`, `decision`, `experiment`, `methodology`
 
 ---
 

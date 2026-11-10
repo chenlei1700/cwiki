@@ -45,13 +45,29 @@ git clone https://github.com/chenlei1700/cwiki .claude/skills/wiki-management
 
 Then commit the `.claude/skills/wiki-management/` directory along with your project, so anyone cloning your project gets the skill too.
 
-## Use
+## Use — two starting scenarios
 
-In any Claude Code session, just say one of:
+The install is identical either way; what differs is the first thing you say.
+
+### Scenario 1 — brand-new project (greenfield)
+
+Say `bootstrap wiki` / `建立 wiki`. The skill creates `wiki/SCHEMA.md`, `index.md`, `log.md`, `MAINTENANCE_ROUTING.md`, `ONBOARDING.md` and the starter category dirs in ~5 minutes (skill.md §2), asks one question about domain categories, and you start ingesting from day one. No machinery beyond the skeleton — scale features wait for their adoption triggers.
+
+### Scenario 2 — existing project (brownfield)
+
+Say `adopt wiki` / `把 wiki 方法论用到现有项目`. The skill runs the **Adoption flow** (skill.md §2B) instead of bare Bootstrap:
+
+1. **Read-only inventory** of what you already have — grown README/docs, a `CLAUDE.md` fat with accumulated lessons, machine artifacts/ledgers — classified into layers; you confirm a one-page adoption map.
+2. **Skeleton stands up alongside** — nothing existing moves; machine artifacts are declared L1 *where they live* (moving them breaks producers); the adoption date becomes the cutoff for all non-retroactive gates.
+3. **Incremental migration, two lanes** — migrate-on-touch for docs real work revisits, plus a small queue for the backlog (automatable for small files via the Mechanism-8 headless driver with mechanical acceptance + rollback).
+4. **Gates only as triggered** — typically just the always-loaded-doc budget + entry-form gate on day one, lint in report-only mode for the first week. Legacy content is never gated retroactively.
+
+The anti-pattern Adoption exists to prevent: a big-bang rewrite of all existing docs into wiki format — it loses fidelity, stalls halfway, and leaves you with two half-truths instead of one messy truth.
+
+### Daily operations (both scenarios, once the wiki exists)
 
 | You say | What happens |
 |---|---|
-| `建立 wiki` / `bootstrap wiki` / `set up project wiki` | §2 Bootstrap — creates `wiki/SCHEMA.md`, `index.md`, `log.md`, `MAINTENANCE_ROUTING.md`, `ONBOARDING.md` and 4 starter category dirs |
 | `ingest this: <material>` / `把这个加进 wiki` | §3 Ingest — classifies, creates/updates the host page, adds `[[]]` cross-refs, updates `index.md` + `log.md` |
 | `wiki 里有没有 X` / `query wiki` / `之前对 X 的结论是?` | §4 Query — reads `index.md`, walks to candidate pages, answers with citations |
 | `lint wiki` / `wiki 体检` | §5 Lint — orphan-page check, dangling-link check, stale-status scan, L1/L2/L3 violation check |

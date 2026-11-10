@@ -1,6 +1,6 @@
 ---
 name: wiki-management
-description: LLM-maintained project knowledge base methodology. Provides 3-layer data model (SSOT / Derived / Narrative), event-routing maintenance table, [[name]] cross-references, Ingest/Query/Lint operations, and the sync/drift/enforcement mechanisms that keep the wiki alive at scale. Use when user says "set up a wiki", "建立知识库", "项目文档体系", "bootstrap wiki", "ingest 资料到 wiki", "query 知识库", "lint wiki", "整理项目知识", or wants to apply LLM-maintained knowledge base methodology to a new project. Bootstraps from templates if `wiki/` does not exist; otherwise drives daily Ingest/Query/Lint workflows over existing wiki.
+description: LLM-maintained project knowledge base methodology. Provides 3-layer data model (SSOT / Derived / Narrative), event-routing maintenance table, [[name]] cross-references, Ingest/Query/Lint operations, and the sync/drift/enforcement mechanisms that keep the wiki alive at scale. Use when user says "set up a wiki", "建立知识库", "项目文档体系", "bootstrap wiki", "adopt wiki", "把 wiki 方法论用到现有项目", "整理现有文档", "ingest 资料到 wiki", "query 知识库", "lint wiki", "整理项目知识", or wants to apply LLM-maintained knowledge base methodology to a new OR existing project. Fresh project → Bootstrap (§2); existing project with scattered docs → Adoption (§2B); existing wiki → daily Ingest/Query/Lint workflows.
 ---
 
 # wiki-management — LLM-maintained knowledge base methodology
@@ -13,18 +13,19 @@ This skill is **project-agnostic**: the methodology applies equally to a quant t
 
 ## 0. Trigger & first-step decision
 
-Triggered when the user says any of: "建立 wiki / 知识库", "bootstrap wiki", "set up project wiki", "整理项目知识", "ingest <material>", "query wiki", "lint wiki", "wiki 体检", or asks how to apply this methodology to their project.
+Triggered when the user says any of: "建立 wiki / 知识库", "bootstrap wiki", "set up project wiki", "adopt wiki", "把 wiki 方法论用到现有项目", "整理项目知识", "ingest <material>", "query wiki", "lint wiki", "wiki 体检", or asks how to apply this methodology to their project.
 
-**First action — detect state**:
+**First action — detect state** (two probes, not one):
 
 ```bash
-ls wiki/SCHEMA.md   # exists → existing wiki, go to §3-§5 operations
-                    # missing → fresh project, go to §2 Bootstrap
+ls wiki/SCHEMA.md                      # exists → wiki already operating
+ls README.md docs/ CLAUDE.md 2>/dev/null   # any hits → project has existing knowledge
 ```
 
-Branch:
-- `wiki/` **does not exist** OR `wiki/SCHEMA.md` missing → **§2 Bootstrap**
+Branch — three cases, not two:
 - `wiki/SCHEMA.md` exists → **§3 Ingest / §4 Query / §5 Lint** based on user intent
+- No SCHEMA, and the project is **fresh** (little/no existing docs, no accumulated CLAUDE.md, no machine artifacts) → **§2 Bootstrap**
+- No SCHEMA, but the project **already has knowledge** — a grown README, a `docs/` folder, a CLAUDE.md fat with dated lessons, machine-produced artifacts/ledgers → **§2B Adoption**. Do *not* run bare Bootstrap here: a skeleton dropped next to an existing knowledge mess just becomes one more place to look.
 
 ---
 
@@ -148,6 +149,44 @@ This project has an LLM-maintained knowledge base at `wiki/`. See `wiki/SCHEMA.m
 ### 2.6 Hand off
 
 Tell the user: *"Wiki is bootstrapped. You can now feed me material — articles, post-mortems, design notes, links — and I'll route them into the right pages. Try saying 'ingest this: <paste content>'."*
+
+---
+
+## 2B. Adoption (for projects that already have knowledge)
+
+Same install, different first motion. Bootstrap creates an empty home; adoption has to make a home *next to* a lived-in mess without pretending the mess isn't there. The cardinal rule: **coexist first, migrate incrementally, gate only the new** — a big-bang rewrite of existing docs into wiki format loses fidelity and stalls halfway, which is worse than never starting.
+
+### 2B.1 Inventory (read-only, before creating anything)
+
+Walk the project and list every knowledge carrier with its future layer and injection tier:
+
+| Carrier | Typical classification | Adoption action |
+|---|---|---|
+| `README.md`, `docs/*.md` | L3 narrative (some are really L2 "current state" views) | stays put for now; facts migrate on touch |
+| `CLAUDE.md` with accumulated dated lessons | T3 always-loaded carrying T1 content | becomes the first distillation target (§13) |
+| Machine artifacts / ledgers / JSON outputs | L1 | **never move them** — producers break; declare them L1 where they live and link from wiki |
+| Scattered notes, issue threads, chat exports | raw material | migration queue |
+| Assistant private memory (if any) | unique facts at risk | Mechanism 8 queue |
+
+Produce a one-page **adoption map** from this inventory and confirm it with the user in one question: which domain categories to create, and what is explicitly *not* worth migrating. Then proceed.
+
+### 2B.2 Stand up the skeleton alongside
+
+Run §2.2–§2.5 as-is (SCHEMA, index, log, routing, onboarding). Nothing existing moves. Two adoption-specific touches:
+
+- Record the **adoption date as the project's cutoff date** in SCHEMA — every non-retroactive gate (entry form §13.4, log classes, new-page preflight) keys off it.
+- First log entry uses class `adopt`, listing the adoption map so future sessions know what was deliberately left in place.
+
+### 2B.3 Migrate incrementally, two lanes
+
+- **Migrate-on-touch** (primary): the next time real work needs a legacy doc, route its facts into the wiki *then* — the work provides the context that makes the migration faithful.
+- **Migration queue** (backlog): a small JSON tracker (file, bytes, status) worked in small batches. Small files can be automated with the Mechanism 8 headless driver (mechanical acceptance, fidelity floor, rollback); large or load-bearing docs stay interactive — quality over throughput.
+
+Either lane ends the same way: the legacy location keeps a one-line pointer to the new page (so stale links keep working), and the queue/ledger records the move.
+
+### 2B.4 Gates come last, and only the triggered ones
+
+Wire mechanisms strictly by their adopt-when triggers (§6 / SCHEMA §9–§16). On day one of an adoption, usually only two are justified: the budget + entry-form gate on the fat always-loaded doc (its pain is why you're adopting), and the nightly lint skeleton in report-only mode for a week before giving it exit codes. Everything else waits for its trigger. Gating the legacy backlog on day one kills adoption — the same grace-period principle §9 applies to skills applies to the whole project here.
 
 ---
 
@@ -303,7 +342,8 @@ Generators render summary pages into the wiki under three rules (SCHEMA §11): f
 
 | Situation | What to do |
 |---|---|
-| User starts a session with no `wiki/` | §2 Bootstrap |
+| Fresh project, no `wiki/`, little existing doc | §2 Bootstrap |
+| No `wiki/` but the project already has grown docs / fat CLAUDE.md / artifacts | §2B Adoption — inventory, coexist, migrate incrementally |
 | User feeds new material | §3 Ingest — classify, host page, cross-ref, neighbors, index, log |
 | User asks a project question | §4 Query — read `index.md` first, then candidate pages, cite sources |
 | User asks for cleanup | §5 Lint — 8-item checklist, report, don't auto-fix |
